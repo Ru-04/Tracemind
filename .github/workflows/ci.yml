@@ -1,0 +1,39 @@
+# NOT YET RUN: this workflow has never executed because nothing has been pushed (see PLAN.md).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy
+      - name: Start PostgreSQL with a throwaway password generated for this run
+        run: |
+          PW="$(python -c 'import secrets; print(secrets.token_urlsafe(24))')"
+          echo "::add-mask::$PW"
+          docker run -d --name pg -p 5432:5432 -e POSTGRES_USER=tracemind \
+            -e POSTGRES_PASSWORD="$PW" -e POSTGRES_DB=tracemind_test postgres:16
+          echo "TRACEMIND_TEST_DATABASE_URL=postgresql+psycopg://tracemind:${PW}@127.0.0.1:5432/tracemind_test" >> "$GITHUB_ENV"
+          echo "TRACEMIND_REQUIRE_DB=1" >> "$GITHUB_ENV"
+          for i in $(seq 1 30); do docker exec pg pg_isready -U tracemind && break; sleep 2; done
+      - name: Install the pinned, hash-verified Graphify into its own environment
+        run: |
+          python -m tools.install_graphify --dir "$RUNNER_TEMP/graphify-venv"
+          echo "TRACEMIND_GRAPHIFY_BIN=$RUNNER_TEMP/graphify-venv/bin/graphify" >> "$GITHUB_ENV"
+          echo "TRACEMIND_REQUIRE_GRAPHIFY=1" >> "$GITHUB_ENV"
+      - run: pytest -q
+      - run: pip-audit --skip-editable

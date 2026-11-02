@@ -1,0 +1,9 @@
+{
+  "projects": [
+    {
+      "project_id": "project-demo",
+      "allowed_services": ["demo-payments"],
+      "ingest_key_env": "TRACEMIND_KEY_PROJECT_DEMO"
+    }
+  ]
+}

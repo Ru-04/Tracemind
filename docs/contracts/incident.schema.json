@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tracemind.local/schemas/incident.schema.json",
+  "title": "Incident",
+  "description": "A group of occurrences sharing one fingerprint within a project, service and environment (created from M1/M3; investigated from M4).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "incident_id", "project_id", "service", "environment", "severity", "status", "fingerprint",
+    "fingerprint_version", "first_seen", "last_seen", "occurrence_count", "summary",
+    "commit_association", "investigation_status", "resolution"
+  ],
+  "properties": {
+    "incident_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "service": { "type": "string" },
+    "environment": { "type": "string" },
+    "severity": { "enum": ["ERROR", "CRITICAL"], "description": "Highest severity seen across occurrences." },
+    "status": { "enum": ["open", "investigating", "resolved", "ignored"], "description": "Lifecycle only. 'resolved' does NOT imply a verified root cause." },
+    "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "fingerprint_version": { "type": "integer", "minimum": 1 },
+    "first_seen": { "type": "string", "format": "date-time" },
+    "last_seen": { "type": "string", "format": "date-time" },
+    "occurrence_count": { "type": "integer", "minimum": 1 },
+    "reopen_count": { "type": "integer", "minimum": 0, "description": "Times the incident went from 'resolved' back to 'open' (a new occurrence or a manual reopen)." },
+    "summary": { "type": "string", "description": "Deterministic, derived from the normalized error. Not LLM-generated." },
+    "deployment_id": { "type": ["string", "null"] },
+    "commit_association": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit_sha", "confidence"],
+      "properties": {
+        "commit_sha": { "type": ["string", "null"] },
+        "confidence": {
+          "enum": ["verified", "estimated", "unknown"],
+          "description": "verified = trustworthy deployment/build/telemetry metadata; estimated = timestamp-based weak lead; unknown = no mapping."
+        },
+        "source": { "type": ["string", "null"], "description": "Where the association came from (e.g. telemetry.commit_sha, deployment record)." }
+      }
+    },
+    "investigation_status": { "enum": ["none", "queued", "running", "completed", "failed"] },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": { "enum": ["none", "proposed", "verified"], "description": "Kept separate from 'status'. Only 'verified' when explicit evidence is recorded." },
+        "note": { "type": ["string", "null"] },
+        "evidence_ids": { "type": "array", "items": { "type": "string" } },
+        "recorded_by": { "type": ["string", "null"] },
+        "recorded_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "evidence_ids": { "type": "array", "items": { "type": "string" } }
+  }
+}

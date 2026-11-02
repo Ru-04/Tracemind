@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tracemind.local/schemas/event.schema.json",
+  "title": "NormalizedEvent",
+  "description": "Internal normalized telemetry event as stored (M1). Produced only by the deterministic pipeline; no LLM involvement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id", "project_id", "service", "environment", "occurred_at", "received_at",
+    "severity", "message", "fingerprint", "fingerprint_version", "ingest_status", "redactions_applied"
+  ],
+  "properties": {
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "project_id": { "type": "string" },
+    "service": { "type": "string", "description": "Trimmed and lower-cased." },
+    "environment": { "type": "string", "description": "Trimmed and lower-cased." },
+    "occurred_at": { "type": "string", "format": "date-time", "description": "Original event time, UTC." },
+    "received_at": { "type": "string", "format": "date-time", "description": "Server ingestion time, UTC. Kept separate from occurred_at." },
+    "severity": { "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
+    "message": { "type": "string", "description": "After redaction." },
+    "error_type": { "type": ["string", "null"], "description": "Exception class name, null when unknown. Never guessed." },
+    "stack_trace": { "type": ["string", "null"], "description": "After redaction." },
+    "trace_id": { "type": ["string", "null"], "description": "Lower-cased hex when valid, null when absent. Never fabricated." },
+    "span_id": { "type": ["string", "null"] },
+    "release": { "type": ["string", "null"] },
+    "commit_sha": { "type": ["string", "null"], "description": "Only when supplied by the source. Not inferred." },
+    "attributes": { "type": "object", "additionalProperties": true, "description": "After redaction." },
+    "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "See fingerprint.md." },
+    "fingerprint_version": { "type": "integer", "minimum": 1 },
+    "ingest_status": { "enum": ["accepted", "duplicate", "rejected"] },
+    "redactions_applied": { "type": "integer", "minimum": 0, "description": "Number of values replaced by a redaction marker." },
+    "source": { "type": ["string", "null"], "description": "Submitting client or integration, for provenance." }
+  }
+}

@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+node_modules/
+graphify-out/
+*.log
+.coverage
+htmlcov/
+# TraceMind-owned snapshots and graphs
+/data/
+/.graphify-venv/

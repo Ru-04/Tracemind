@@ -1,0 +1,8 @@
+[
+ "README.md",
+ "app/main.py",
+ "app/orders.py",
+ "app/pricing.py",
+ "web/ui.js",
+ "web/util.js"
+]
